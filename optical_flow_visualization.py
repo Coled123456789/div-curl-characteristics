@@ -7,6 +7,24 @@ import numpy as np
 from os.path import join
 from scipy import signal
 
+"""
+overlays optical flow field on image
+plots vectors seperated by 'gap' number of pixels
+filters vectors smaller than thresh are filtered
+scale, color parameters are used to change vector appearance
+"""
+def overlay_optical_flow(image, flow_field, gap = 5, thresh = 0, color = (0,0,255), scale = 1):
+    if((flow_field.shape[0], flow_field.shape[1]) != (image.shape[0], image.shape[1])):
+        raise Error("Mismatched dimensions for image and flow field")
+    mag, ang = cv2.cartToPolar(flow_field[...,0], flow_field[...,1])
+    for y in range(0, len(image), gap):
+        for x in range(0, len(image[y]), gap):
+            if(mag[y][x] > thresh):
+                u = int(flow_field[y][x][0] * scale)
+                v = int(flow_field[y][x][1] * scale)
+                image = cv2.arrowedLine(image, (x, y), (x + u, y+v), color)
+    return image
+
 
 def main():
     input_frames_dir = "data/Crowd_PETS09/S3/High_Level/Time_14-16/View_001/"
@@ -19,44 +37,16 @@ def main():
     file_num = len(flow_files)
 
     while(i < file_num):
-        print(flow_files[i])
-        flow_field = np.load(flow_files[i])
-        i += 1
-        image_height = flow_field.shape[0]
-        image_length = flow_field.shape[1]
-        vals = np.array
-        thresh = 0.1
-
         image = cv2.imread(frame_files[i+1])
-        cv2.line(image, (0,0), (100,100), color = line_color)
-        for x in range(image_height):
-            for y in range(image_length):
-                u = flow_field[x][y][0]
-                v = flow_field[x][y][1]
-                #print(type(v))
-                
-                mag = math.sqrt(u**2 + v**2)
-                theta = math.atan(float(v/u))
-                if(mag > 0.5):
-                    vals = np.append(vals, mag)
-                    u = int(u*10)
-                    v = int(v*10)
-
-                    #u = 100
-                    #v = 100
-                    cv2.line(image, (x,y), (int(x+u), int(y+v)), color = line_color)
-                    
-                    print("POS: ", x, y)
-                    print("Cart:", u, v)
-                    print("Rad: ", mag, theta)
-                    print("==========================")
-                    
+        flow_field = np.load(flow_files[i])
         
+        image = overlay_optical_flow(image, flow_field, gap = 10, color = (0,0,255), thresh = 5)
+    
         cv2.imshow(frame_files[i+1], image)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
-        print(flow_field.shape)
-        print(image.shape)
+        cv2.waitKey(1000)
+        i += 1
+
+    cv2.destroyAllWindows()
 
 
 
