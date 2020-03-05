@@ -2,6 +2,7 @@ import os
 import glob
 import cv2
 import math
+import argparse
 import numpy as np
 
 from os.path import join
@@ -27,8 +28,19 @@ def overlay_optical_flow(image, flow_field, gap = 5, thresh = 0, color = (0,0,25
 
 
 def main():
-    input_frames_dir = "data/Crowd_PETS09/S3/High_Level/Time_14-16/View_001/"
-    input_opflow_dir = "data/Crowd_PETS09/S3/High_Level/Time_14-16/View_001_Optical_Flows/"
+    parser = argparse.ArgumentParser(description="""calculate and save optical
+                             flow between frames""")
+    parser.add_argument('frame_dir', action = 'store')
+    parser.add_argument('optflow_dir', action = 'store')
+    parser.add_argument('--threshold', action = 'store', type = float, 
+                            default = 0.5)
+    parser.add_argument('--gap', action = 'store', type = int, default = 25)
+    parser.add_argument('--scale', action = 'store', type = float, default = 1)
+
+    args = parser.parse_args()
+
+    input_frames_dir = args.frame_dir
+    input_opflow_dir = args.optflow_dir
 #    print(sorted(glob.glob(input_dir + "*.jpg")))
     frame_files = sorted(glob.glob(input_frames_dir + "*.jpg"))
     flow_files = sorted(glob.glob(input_opflow_dir+"*.npy"))
@@ -40,7 +52,8 @@ def main():
         image = cv2.imread(frame_files[i+1])
         flow_field = np.load(flow_files[i])
         
-        image = overlay_optical_flow(image, flow_field, gap = 10, color = (0,0,255), thresh = 5)
+        image = overlay_optical_flow(image, flow_field, gap = args.gap, 
+            color = (0,0,255), thresh = args.threshold, scale = args.scale)
     
         cv2.imshow(frame_files[i+1], image)
         cv2.waitKey(1000)
