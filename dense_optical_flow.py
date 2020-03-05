@@ -1,4 +1,5 @@
 import os 
+import argparse
 import glob
 import cv2
 import numpy as np
@@ -8,9 +9,14 @@ from scipy import signal
 
 
 def main():
-    input_dir = "data/Crowd_PETS09/S3/High_Level/Time_14-16/View_001/"
-    output_dir = "data/Crowd_PETS09/S3/High_Level/Time_14-16/View_001_Optical_Flows/"
-#    print(sorted(glob.glob(input_dir + "*.jpg")))
+    parser = argparse.ArgumentParser(description="""calculate and save optical 
+                            flow between frames""")
+    parser.add_argument('input_dir', action = 'store')
+    parser.add_argument('output_dir', action = 'store')
+    args = parser.parse_args()
+
+    input_dir = args.input_dir
+    output_dir = args.output_dir
     files = sorted(glob.glob(input_dir + "*.jpg"))
     win_size = 15
     imga = None
@@ -27,6 +33,7 @@ def main():
         flow = cv2.calcOpticalFlowFarneback(imga,imgb,None, 0.5, 1, 15, 3, 5, 1.5, 0)
 
         output_filename = output_dir+"opt_flow"+format(i - 1, '04')+".npy"
+       
         print(output_filename)
         np.save(output_filename, flow)
         i += 1
